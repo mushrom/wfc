@@ -1,15 +1,17 @@
 #pragma once
 
+namespace wfc {
+
 // dynamic bitset for storing boolean state flags (TODO: better description)
-class dynamic_flagset {
+class dynamicFlagset {
 	public:
-		dynamic_flagset() {
+		dynamicFlagset() {
 			bits.reserve(4);
 			bits.resize(bits.capacity(), 0);
 		};
 
 		/*
-		dynamic_flagset(const dynamic_flagset& other) {
+		dynamicFlagset(const dynamicFlagset& other) {
 			members = other.members;
 			bits.insert(bits.end(), other.bits.begin(), other.bits.end());
 		}
@@ -20,10 +22,10 @@ class dynamic_flagset {
 		static constexpr const size_t mod = 8*sizeof(size_t);
 
 		struct Iterator {
-			Iterator(const dynamic_flagset *_ptr, size_t _pos)
+			Iterator(const dynamicFlagset *_ptr, size_t _pos)
 				: ptr(_ptr), pos(_pos) { }
 
-			const dynamic_flagset *ptr;
+			const dynamicFlagset *ptr;
 			size_t pos;
 
 			size_t& operator*() { return pos; };
@@ -50,8 +52,8 @@ class dynamic_flagset {
 				return Iterator(ptr, ret);
 			};
 
-			bool operator==(dynamic_flagset::Iterator const& rhs) { return pos == rhs.pos; };
-			bool operator!=(dynamic_flagset::Iterator const& rhs) { return pos != rhs.pos; };
+			bool operator==(dynamicFlagset::Iterator const& rhs) { return pos == rhs.pos; };
+			bool operator!=(dynamicFlagset::Iterator const& rhs) { return pos != rhs.pos; };
 		};
 
 		size_t size() const {
@@ -79,7 +81,7 @@ class dynamic_flagset {
 			return bits.size() * mod;
 		}
 
-		bool constrains(dynamic_flagset const& rhs) {
+		bool constrains(dynamicFlagset const& rhs) {
 			size_t sum = 0;
 
 			for (size_t i = 0; i < bits.size() && i < rhs.bits.size(); i++) {
@@ -99,7 +101,7 @@ class dynamic_flagset {
 			members = sum;
 		}
 
-		bool constrain(dynamic_flagset const& rhs) {
+		bool constrain(dynamicFlagset const& rhs) {
 			size_t sum = 0;
 
 			for (size_t i = 0; i < bits.size(); i++) {
@@ -113,7 +115,7 @@ class dynamic_flagset {
 			return !!sum;
 		}
 
-		void unify(dynamic_flagset const& rhs) {
+		void unify(dynamicFlagset const& rhs) {
 			if (rhs.bits.size() > bits.size()) {
 				//bits.reserve(rhs.bits.size());
 				bits.resize(rhs.bits.size(), 0);
@@ -183,3 +185,5 @@ class dynamic_flagset {
 		}
 };
 
+// namespace wfc
+}

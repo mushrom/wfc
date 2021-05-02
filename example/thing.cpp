@@ -3,230 +3,15 @@
 #include <wfc-test/stb_image_write.h>
 #include <wfc-test/tileset.hpp>
 
-#include <wfc-test/dynamic_flagset.hpp>
-#include <wfc-test/static_flagset.hpp>
+#include <wfc-test/stateSet.hpp>
+#include <wfc-test/stateDefinition2D.hpp>
 
 #include <string.h>
 #include <unistd.h>
-#include <bit>
-#include <bitset>
-
-#include <unordered_set>
-#include <unordered_map>
-#include <map>
 
 #include <getopt.h>
 
-class statedef {
-	public:
-		using State = unsigned;
-		static constexpr size_t maxStates = 256;
-
-		// different implementations of StateSet here for benchmarking
-		// TODO: template or something
-#if 1
-		class StateSet : public static_flagset<256> {
-			public:
-				size_t countStates() const { return size(); }
-				bool hasState(const State& s) const { return count(s); }
-
-				bool   anySet() const { return size() > 0; };
-				void   setState(const State& s) { insert(s); };
-				void   clearStates() { clear(); };
-				void   unsetState(const State& s) { erase(s); };
-				State  chooseState() {
-					// TODO: for choosing random state
-					size_t k = rand() % size();
-					//auto em = *std::next(begin(), k);
-					auto em = *(begin() + k);
-
-					return em;
-				}
-		};
-#endif
-
-#if 0
-		class StateSet : public dynamic_flagset {
-			public:
-				size_t countStates() const { return size(); }
-				bool hasState(const State& s) const { return count(s); }
-
-				bool   anySet() const { return size() > 0; };
-				void   setState(const State& s) { insert(s); };
-				void   clearStates() { clear(); };
-				void   unsetState(const State& s) { erase(s); };
-				State  chooseState() {
-					// TODO: for choosing random state
-					size_t k = rand() % size();
-					//auto em = *std::next(begin(), k);
-					auto em = *(begin() + k);
-
-					return em;
-				}
-		};
-#endif
-	
-#if 0
-		class StateSet : public std::unordered_set<State> {
-			public:
-				bool constrain(const StateSet& b) {
-					bool altered = false;
-
-					for (auto it = begin(); it != end();) {
-						if (!b.hasState(*it)) {
-							it = erase(it);
-							altered = true;
-
-						} else {
-							it = std::next(it);
-							//it++;
-						}
-					}
-
-					return altered;
-				}
-
-				void unify(const StateSet& b) {
-					for (auto& em : b) {
-						insert(em);
-					}
-				}
-
-				size_t countStates() const { return size(); }
-				bool hasState(const State& s) const { return count(s); }
-
-				bool   anySet() const { return size() > 0; };
-				void   setState(const State& s) { insert(s); };
-				void   clearStates() { clear(); };
-				void   unsetState(const State& s) { erase(s); };
-				State  chooseState() {
-					// TODO: for choosing random state
-					size_t k = rand() % size();
-					auto em = *std::next(begin(), k);
-
-					return em;
-				}
-		};
-#endif
-
-#if 0
-		class StateSet : public std::set<State> {
-			public:
-				bool constrain(const StateSet& b) {
-					bool altered = false;
-
-					if (size() <= 1) {
-						return false;
-					}
-
-					for (auto it = begin(); it != end();) {
-						if (b.hasState(*it) == 0) {
-							it = erase(it);
-							altered = true;
-
-						} else {
-							it = std::next(it);
-						}
-					}
-
-					return altered;
-				}
-
-				void unify(const StateSet& b) {
-					for (auto& em : b) {
-						insert(em);
-					}
-				}
-
-				size_t countStates() const { return size(); }
-				bool hasState(const State& s) const { return count(s); }
-
-				bool   anySet() const { return size() != 0; };
-				void   setState(const State& s) { insert(s); };
-				void   clearStates() { clear(); };
-				void   unsetState(const State& s) { erase(s); };
-				State  chooseState() {
-					// TODO: for choosing random state
-					size_t k = rand() % size();
-					auto em = *std::next(begin(), k);
-
-					return em;
-				}
-
-		};
-#endif
-
-#if 0
-		class StateSet : public std::bitset<maxStates> {
-			public:
-				bool constrain(const StateSet& b) {
-					bool altered = ((*this) ^ b).any();
-					operator&=(b);
-					return altered;
-				}
-
-				void unify(const StateSet& b) {
-					operator|=(b);
-				}
-
-				bool   anySet() const { return any(); };
-				size_t countStates() const { return count(); };
-				size_t hasState(const State& s) const { return test(s); };
-				void   setState(const State& s) { set(s); };
-				void   clearStates() { reset(); };
-				void   unsetState(const State& s) { set(s, false); };
-				State  chooseState() {
-					for (unsigned i = 0; i < maxStates; i++) {
-						if (test(i)) {
-							return i;
-						}
-					}
-
-					// invalid
-					return 0;
-				}
-		};
-#endif
-
-		static constexpr unsigned sockets = 4;
-		std::unordered_map<State, StateSet> socketmap[sockets];
-		//StateSet socketmap[sockets];
-		StateSet states;
-
-		void initializeTile(StateSet& s, uint64_t socketMask) {
-			//for (State em = 0; em < maxStates; em++) {
-			for (auto& em : states) {
-				bool satisfied = true;
-
-				for (unsigned bit = 0; bit < 4; bit++) {
-					auto& smap = socketmap[bit];
-					bool hasDir =
-						smap.find(em) != smap.end() && smap[em].anySet();
-
-					satisfied &= ((socketMask & (1 << bit)) && hasDir) || !((socketMask & (1 << bit)));
-				}
-
-				if (satisfied) {
-					s.setState(em);
-				}
-			}
-		}
-
-		const StateSet& connects(const State& s, unsigned socket) const {
-			static StateSet empty = {};
-			auto it = socketmap[socket].find(s);
-
-			if (it == socketmap[socket].end()) {
-				//std::cerr << "NO BAD NO" << std::endl;
-				return empty;
-
-			} else {
-				return it->second;
-			}
-
-			//return socketmap
-		}
-};
+using namespace wfc;
 
 void dumpPPM(const char *filename, int width, int height, uint8_t *px, int channels, int stride)
 {
@@ -266,6 +51,11 @@ void dumpPPM(const char *filename, int width, int height, uint8_t *px, int chann
 #define WIDTH  18
 #define HEIGHT 18
 
+//#define WIDTH  12
+//#define HEIGHT 12
+//#define WIDTH  15
+//#define HEIGHT 23
+
 int main(int argc, char *argv[]) {
 	srand(time(NULL));
 
@@ -292,7 +82,12 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	statedef foo;
+	//using stateDef = stateDefinition2DBounded<stateSet<staticFlagset<256>>>;
+	using stateDef = stateDefinition2D<staticStateSet<256>>;
+	//using stateDef = stateDefinition2DBounded<dynamicStateSet>;
+	//using stateDef = stateDefinition2D<unorderedStateSet>;
+	//using stateDef = stateDefinition2D<orderedStateSet>;
+	stateDef foo;
 	tileset tiles(input, tilesize);
 
 	std::map<std::pair<int, int>, unsigned> dirmap = {
@@ -310,15 +105,15 @@ int main(int argc, char *argv[]) {
 
 	for (auto& [idx, neighbors] : tiles.neighbors) {
 		for (auto& [x, y, neighbor] : neighbors) {
-			std::pair<int, int> dir(x, y);
-			std::pair<int, int> negdir(-x, -y);
-
-			foo.socketmap[dirmap[dir]][idx].setState(neighbor);
-			//foo.socketmap[dirmap[negdir]][neighbor].insert(idx);
+			foo.addNeighbor({
+				.dir = dirmap[{x, y}],
+				.a   = idx,
+				.b   = neighbor,
+			});
 		}
 	}
 
-	wfc<statedef, WIDTH, HEIGHT> wfcgrid(foo);
+	WFCSolver<stateDef, WIDTH, HEIGHT> wfcgrid(foo);
 	wfcgrid.toroid = toroid;
 	wfcgrid.backtrackDepth = backtrackDepth;
 
@@ -335,7 +130,7 @@ int main(int argc, char *argv[]) {
 		}
 
 		if (debug || (!running && valid)) {
-			std::cerr << "Dumping output..." << std::endl;
+			//std::cerr << "Dumping output..." << std::endl;
 			memset(data, 0, imgsize);
 			for (unsigned n = 3; n < imgsize; n += 4) { data[n] = 0xff; };
 

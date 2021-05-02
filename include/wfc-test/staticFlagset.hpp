@@ -1,15 +1,17 @@
 #pragma once
 
+namespace wfc {
+
 // dynamic bitset for storing boolean state flags (TODO: better description)
 template <size_t maxStates>
-class static_flagset {
+class staticFlagset {
 	public:
-		static_flagset() {
+		staticFlagset() {
 			clear();
 		};
 
 		/*
-		static_flagset(const static_flagset& other) {
+		staticFlagset(const staticFlagset& other) {
 			members = other.members;
 			bits.insert(bits.end(), other.bits.begin(), other.bits.end());
 		}
@@ -21,10 +23,10 @@ class static_flagset {
 		size_t members = 0;
 
 		struct Iterator {
-			Iterator(const static_flagset *_ptr, size_t _pos)
+			Iterator(const staticFlagset *_ptr, size_t _pos)
 				: ptr(_ptr), pos(_pos) { }
 
-			const static_flagset *ptr;
+			const staticFlagset *ptr;
 			size_t pos;
 
 			size_t& operator*() { return pos; };
@@ -51,8 +53,8 @@ class static_flagset {
 				return Iterator(ptr, ret);
 			};
 
-			bool operator==(static_flagset::Iterator const& rhs) { return pos == rhs.pos; };
-			bool operator!=(static_flagset::Iterator const& rhs) { return pos != rhs.pos; };
+			bool operator==(staticFlagset::Iterator const& rhs) { return pos == rhs.pos; };
+			bool operator!=(staticFlagset::Iterator const& rhs) { return pos != rhs.pos; };
 		};
 
 		size_t size() const {
@@ -80,7 +82,7 @@ class static_flagset {
 			return maxStates;
 		}
 
-		bool constrains(static_flagset const& rhs) {
+		bool constrains(staticFlagset const& rhs) {
 			size_t sum = 0;
 
 			for (size_t i = 0; i < bitsSize; i++) {
@@ -100,7 +102,7 @@ class static_flagset {
 			members = sum;
 		}
 
-		bool constrain(static_flagset const& rhs) {
+		bool constrain(staticFlagset const& rhs) {
 			size_t sum = 0;
 
 			for (size_t i = 0; i < bitsSize; i++) {
@@ -112,7 +114,7 @@ class static_flagset {
 			return !!sum;
 		}
 
-		void unify(static_flagset const& rhs) {
+		void unify(staticFlagset const& rhs) {
 			for (size_t i = 0; i < bitsSize; i++) {
 				bits[i] |= rhs.bits[i];
 			}
@@ -172,3 +174,5 @@ class static_flagset {
 		}
 };
 
+// namespace wfc
+}

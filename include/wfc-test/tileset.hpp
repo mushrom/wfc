@@ -8,6 +8,8 @@
 #include <stdexcept>
 #include <iostream>
 
+namespace wfc {
+
 class tileset {
 	public:
 		uint8_t *pixels;
@@ -98,6 +100,7 @@ class tileset {
 						if (unsigned neighbor = getTile(tx + x, ty + y)) {
 							unsigned nidx = hashToIndex[neighbor];
 							neighbors[cidx].push_back({x, y, nidx});
+							//neighbors[nidx].push_back({-x, -y, cidx});
 						}
 					}
 				}
@@ -153,3 +156,6 @@ class tileset {
 			return sum;
 		}
 };
+
+// namespace wfc
+}

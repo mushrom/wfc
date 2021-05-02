@@ -18,6 +18,8 @@ concept Stateclass = requires(S a) {
 }
 */
 
+namespace wfc {
+
 template <typename S, size_t X, size_t Y>
 class grid {
 	public:
@@ -85,9 +87,9 @@ class grid {
 };
 
 template <typename S, size_t X, size_t Y>
-class wfc {
+class WFCSolver {
 	public:
-		wfc(S& _stateclass) 
+		WFCSolver(S& _stateclass) 
 			: gridState(_stateclass),
 			  stateclass(_stateclass) { }
 
@@ -177,7 +179,7 @@ class wfc {
 
 			auto& tile = gridState.tiles[y*X + x];
 
-			for (unsigned i = 0; i < S::sockets; i++) {
+			for (unsigned i = 0; i < S::Sockets; i++) {
 				typename S::StateSet constraints;
 
 				// TODO: some sort of caching here, to avoid recalculating
@@ -282,3 +284,6 @@ class wfc {
 			return {true, true};
 		}
 };
+
+// namespace wfc
+}
