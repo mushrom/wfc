@@ -27,19 +27,7 @@ class grid {
 		typename S::StateSet tiles[gridSize];
 
 		grid(S& stateclass) {
-			for (size_t y = 0; y < Y; y++) {
-				for (size_t x = 0; x < X; x++) {
-					size_t idx = y*X + x;
-					uint64_t sockets = ~0; // default to all bits set
-
-					sockets &= ~((x == 0)     << 0); // no left
-					sockets &= ~((y == 0)     << 1); // no up
-					sockets &= ~((x + 1 == X) << 2); // no right
-					sockets &= ~((y + 1 == Y) << 3); // no down
-
-					stateclass.initializeTile(tiles[idx], sockets);
-				}
-			}
+			reset(stateclass);
 		}
 
 		std::pair<size_t, size_t> curMin(void) {
@@ -84,6 +72,22 @@ class grid {
 		static inline bool validCoord(size_t x, size_t y) {
 			return x < X && y < Y;
 		}
+
+		void reset(S& stateclass) {
+			for (size_t y = 0; y < Y; y++) {
+				for (size_t x = 0; x < X; x++) {
+					size_t idx = y*X + x;
+					uint64_t sockets = ~0; // default to all bits set
+
+					sockets &= ~((x == 0)     << 0); // no left
+					sockets &= ~((y == 0)     << 1); // no up
+					sockets &= ~((x + 1 == X) << 2); // no right
+					sockets &= ~((y + 1 == Y) << 3); // no down
+
+					stateclass.initializeTile(tiles[idx], sockets);
+				}
+			}
+		}
 };
 
 template <typename S, size_t X, size_t Y>
@@ -107,6 +111,12 @@ class WFCSolver {
 		};
 
 		std::list<collapseChoice> collapseStack;
+
+		void reset(void) {
+			gridState.reset(stateclass);
+			propCoords.clear();
+			collapseStack.clear();
+		}
 
 		void recalculateConstraints(size_t x, size_t y) {
 			if (!gridState.validCoord(x, y)) {
