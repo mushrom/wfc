@@ -45,7 +45,7 @@ class dynamicFlagset {
 			Iterator operator+(int n) {
 				size_t ret = pos;
 
-				for (unsigned i = 0; i < n; i++) {
+				for (int i = 0; i < n; i++) {
 					ret = ptr->next(ret);
 				}
 

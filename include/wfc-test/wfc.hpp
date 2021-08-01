@@ -171,6 +171,38 @@ class WFCSolver {
 			return true;
 		}
 
+		bool setTile(size_t x, size_t y, unsigned state) {
+			if (!gridState.validCoord(x, y)) {
+				return false;
+			}
+
+			size_t n = y*X + x;
+			auto& tile = gridState.tiles[n];
+
+			tile.clearStates();
+			tile.setState(state);
+
+			propCoords.push_back({x, y});
+			return true;
+		}
+
+		bool setTile(size_t x, size_t y, std::set<unsigned>& states) {
+			if (!gridState.validCoord(x, y)) {
+				return false;
+			}
+
+			size_t n = y*X + x;
+			auto& tile = gridState.tiles[n];
+
+			tile.clearStates();
+			for (auto& state : states) {
+				tile.setState(state);
+			}
+
+			propCoords.push_back({x, y});
+			return true;
+		}
+
 		bool propagate(size_t x, size_t y) {
 			static std::pair<int, int> directions[] = {
 				{-1,  0},
